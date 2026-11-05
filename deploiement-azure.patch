@@ -1,0 +1,78 @@
+diff --git a/package.json b/package.json
+index 84128ea..99e9740 100644
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,10 @@
+   "type": "module",
+   "scripts": {
+     "dev": "vite",
++    "api": "json-server --watch db.json --port 3000",
+     "build": "run-p type-check \"build-only {@}\" --",
+     "preview": "vite preview",
++    "start": "node server.cjs",
+     "build-only": "vite build",
+     "type-check": "vue-tsc --build",
+     "lint": "run-s lint:*",
+diff --git a/server.cjs b/server.cjs
+new file mode 100644
+index 0000000..b764872
+--- /dev/null
++++ b/server.cjs
+@@ -0,0 +1,24 @@
++const jsonServer = require('json-server')
++const path = require('path')
++const fs = require('fs')
++
++// Sur Azure, /home est persistant et inscriptible : on y garde la base
++// pour qu'elle ne soit pas écrasée à chaque déploiement.
++const dataDir = process.env.WEBSITE_SITE_NAME ? '/home/data' : __dirname
++const dbFile = path.join(dataDir, 'db.json')
++if (!fs.existsSync(dbFile)) {
++  fs.mkdirSync(dataDir, { recursive: true })
++  fs.copyFileSync(path.join(__dirname, 'db.json'), dbFile)
++}
++
++const distDir = path.join(__dirname, 'dist')
++const server = jsonServer.create()
++
++server.use(jsonServer.defaults({ static: distDir }))
++server.use('/api', jsonServer.router(dbFile))
++
++// vue-router en mode history : toutes les autres routes renvoient index.html
++server.get('*', (req, res) => res.sendFile(path.join(distDir, 'index.html')))
++
++const port = process.env.PORT || 3000
++server.listen(port, () => console.log(`Serveur démarré sur le port ${port}`))
+diff --git a/src/services/service.js b/src/services/service.js
+index 4e2aab7..1423899 100644
+--- a/src/services/service.js
++++ b/src/services/service.js
+@@ -2,7 +2,7 @@ import axios from 'axios'
+ 
+ // File for api calls and stuff
+ const apiClient = axios.create({
+-  baseURL: 'http://localhost:3000',
++  baseURL: '/api',
+   withCredentials: false,
+   headers: {
+     Accept: 'application/json',
+diff --git a/vite.config.ts b/vite.config.ts
+index 4217010..9775012 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -10,6 +10,15 @@ export default defineConfig({
+     vue(),
+     vueDevTools(),
+   ],
++  server: {
++    // En dev : /api/... est redirigé vers json-server (npm run api)
++    proxy: {
++      '/api': {
++        target: 'http://localhost:3000',
++        rewrite: (path) => path.replace(/^\/api/, ''),
++      },
++    },
++  },
+   resolve: {
+     alias: {
+       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "api": "json-server --watch db.json --port 3000",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
+    "start": "node server.cjs",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "run-s lint:*",
