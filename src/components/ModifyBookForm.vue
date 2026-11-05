@@ -9,7 +9,7 @@ const route = useRoute()
 // get the id of the current book
 const bookId = ref(route.params.id)
 
-const currentBook = ref(null)
+const currentBook = ref<Record<string, unknown> | null>(null)
 
 onMounted(async () => {
   const response = await Service.getBook(bookId.value)
@@ -32,13 +32,14 @@ const categories = ['roman', 'poesie', 'theatre', 'essai', 'biographie', 'scienc
 const titre = ref('')
 const categorie = ref('')
 const num_pages = ref(0)
-const extrait_livre = ref(null)
+// string = chemin déjà enregistré en base, File = nouveau fichier choisi
+const extrait_livre = ref<File | string | null>(null)
 const resume = ref('')
 const nom_auteur = ref('')
 const prenom_auteur = ref('')
 const nom_editeur = ref('')
 const annee_edition = ref(0)
-const image_couverture = ref(null)
+const image_couverture = ref<File | string | null>(null)
 
 const onCoverIgmChange = (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -95,7 +96,10 @@ const modifyBook = () => {
     titre: titre.value,
     categorie: categorie.value,
     nbPages: num_pages.value,
-    extrait: extrait_livre.value ? `/extraitsLivres/${extrait_livre.value.name}` : '',
+    extrait:
+      extrait_livre.value instanceof File
+        ? `/extraitsLivres/${extrait_livre.value.name}`
+        : (extrait_livre.value ?? ''),
     resume: resume.value,
     auteur: {
       nom: nom_auteur.value,
@@ -103,9 +107,10 @@ const modifyBook = () => {
     },
     editeur: nom_editeur.value,
     anneeEdition: annee_edition.value,
-    imageCouverture: image_couverture.value
-      ? `/book covers/${image_couverture.value.name}`
-      : `/book covers/1.jpg`,
+    imageCouverture:
+      image_couverture.value instanceof File
+        ? `/book covers/${image_couverture.value.name}`
+        : image_couverture.value || `/book covers/1.jpg`,
   }
 
   // modify the book in the db

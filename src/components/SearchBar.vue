@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-//@ts-expect-error c'est du js !
 import Service from '@/services/service.js'
 import type { AxiosResponse } from 'axios'
 import router from '@/router'

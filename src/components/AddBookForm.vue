@@ -9,13 +9,13 @@ const categories = ['roman', 'poesie', 'theatre', 'essai', 'biographie', 'scienc
 const titre = ref('')
 const categorie = ref('')
 const num_pages = ref(0)
-const extrait_livre = ref(null)
+const extrait_livre = ref<File | null>(null)
 const resume = ref('')
 const nom_auteur = ref('')
 const prenom_auteur = ref('')
 const nom_editeur = ref('')
 const annee_edition = ref(0)
-const image_couverture = ref(null)
+const image_couverture = ref<File | null>(null)
 
 const onCoverIgmChange = (e: Event) => {
   const target = e.target as HTMLInputElement
